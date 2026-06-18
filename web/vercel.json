@@ -1,9 +1,0 @@
-{
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/vintage.html",
-      "permanent": true
-    }
-  ]
-}
