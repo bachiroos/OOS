@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OutOfSight - Choose Your Reality</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --acid: #E8FF00; --pink: #FF2D78; --cyan: #00F5FF;
+      --void: #080010; --purple: #8d4bfd; --soft: #F0E8FF;
+      --orange: #FF6B00; --lime: #39FF14;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: var(--void);
+      color: var(--soft);
+      font-family: 'Syne', sans-serif;
+      height: 100%;
+      overflow: hidden;
+    }
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    body.traveling { overflow: hidden; }
+
+    .choice-container {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      /* Remove flex for clip-path layout */
+      background: var(--void);
+    }
+    .choice-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      text-decoration: none;
+      color: var(--soft);
+      position: relative;
+      overflow: hidden;
+      transition: background-color 0.4s ease;
+      /* Use absolute positioning for diagonal split */
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%; /* Make panels full width to clip correctly */
+      transform: scale(1);
+    }
+    #mind {
+      left: 0;
+      align-items: flex-start; /* Align content to the top */
+      justify-content: flex-start; /* Align content to the left */
+      clip-path: polygon(0 0, 100% 0, 0 100%); /* Top-left to bottom-left triangle */
+    }
+    .choice-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(8,0,16,0.5), rgba(8,0,16,0.8));
+      transition: opacity 0.4s ease;
+    }
+    #mind .choice-content {
+      text-align: left; /* Ensure text inside is left-aligned */
+      padding: 25% 35% 0 10%; /* Pulled text away from the diagonal cut */
+    }
+    #mind.choice-panel {
+      /* Reverted to a dark background similar to index.html hero */
+      background:
+        radial-gradient(ellipse 80% 50% at 80% 20%,rgba(123,47,255,0.2) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 40% at 10% 70%,rgba(255,45,120,0.12) 0%,transparent 60%),
+        var(--void);
+    }
+    #era {
+      right: 0;
+      align-items: flex-end; /* Align content to the bottom */
+      justify-content: flex-end; /* Align content to the right */
+      clip-path: polygon(100% 0, 100% 100%, 0 100%); /* Bottom-right to top-right triangle */
+    }
+    #era {
+      /* Changed to a solid beige color for a cleaner vintage look */
+      background: #EAD8C0;
+      transition: background-color 0.4s ease;
+    }
+    #era::before {
+      /* Removed dark gradient, keeping only the subtle grain effect */
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      background-blend-mode: overlay;
+      opacity: 0.1;
+    }
+    #era .choice-content {
+      text-align: right; /* Ensure text inside is right-aligned */
+      padding: 0 10% 25% 35%; /* Pulled text away from the diagonal cut */
+    }
+    .choice-content {
+      position: relative;
+      z-index: 2;
+      padding: 20px;
+      transform: translateY(20px);
+      opacity: 0;
+      animation: fadeIn 1s 0.5s forwards;
+    }
+    @keyframes fadeIn {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    @keyframes glitch {
+      2%, 64% { transform: translate(2px, 0) skew(0deg); }
+      4%, 60% { transform: translate(-2px, 0) skew(0deg); }
+      62% { transform: translate(0, 0) skew(5deg); }
+    }
+    @keyframes glitch-before {
+      0%, 15%, 18%, 21%, 24%, 100% { clip-path: inset(50% 50% 50% 50%); }
+      16% { clip-path: inset(10% 0 80% 0); } 17% { clip-path: inset(90% 0 5% 0); }
+      19% { clip-path: inset(40% 0 40% 0); } 20% { clip-path: inset(20% 0 70% 0); }
+      22% { clip-path: inset(80% 0 10% 0); } 23% { clip-path: inset(5% 0 90% 0); }
+    }
+    @keyframes glitch-after {
+      0%, 15%, 18%, 21%, 24%, 100% { clip-path: inset(50% 50% 50% 50%); }
+      16% { clip-path: inset(80% 0 10% 0); } 17% { clip-path: inset(5% 0 90% 0); }
+      19% { clip-path: inset(20% 0 70% 0); } 20% { clip-path: inset(40% 0 40% 0); }
+      22% { clip-path: inset(90% 0 5% 0); } 23% { clip-path: inset(10% 0 80% 0); }
+    }
+
+    /* MULTIVERSE TRAVEL LOADING SCREEN */
+    #multiverse-travel {
+      position: fixed; inset: 0; z-index: 9000;
+      background: #000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      pointer-events: none;
+    }
+    .traveling #multiverse-travel { display: flex; animation: travelOverlay 1.4s ease-in-out forwards; }
+    
+    @keyframes travelOverlay {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .warp-tunnel { position: absolute; inset: 0; overflow: hidden; }
+    .warp-star {
+      position: absolute; width: 2px; height: 2px;
+      background: #fff; border-radius: 50%; opacity: 0;
+      left: 50%; top: 50%;
+    }
+    @keyframes starTravel {
+      0% { transform: translate(0,0) scale(0); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(4); opacity: 0; }
+    }
+    .travel-msg {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(32px, 8vw, 64px);
+      color: #fff;
+      z-index: 10;
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 20px var(--cyan);
+      animation: glitch 0.3s infinite;
+    }
+    #noise-overlay {
+      position: fixed; inset: -50%; z-index: 9500;
+      opacity: 0; pointer-events: none;
+    }
+
+    .choice-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 10vw, 120px);
+      line-height: 0.9;
+      letter-spacing: 0.05em;
+      margin: 0;
+      text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+    .choice-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 10px;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    }
+    #mind .choice-title { color: var(--acid); }
+    #mind .choice-subtitle { color: var(--cyan); opacity: 0.7; }
+    #era .choice-title { color: #2D241E; }
+    #era .choice-subtitle { color: #8B7355; }
+
+    .click-indicator {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-top: 25px;
+      animation: pulse-indicator 2.5s infinite ease-in-out;
+    }
+    #mind .click-indicator { color: var(--acid); }
+    #era .click-indicator { color: #2D241E; }
+
+    .main-title {
+        position: absolute;
+        top: 1vh; /* Moved even higher */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 32px;
+        letter-spacing: 0.1em;
+        color: var(--soft);
+        text-shadow: 0 0 15px var(--purple);
+        opacity: 0;
+        animation: fadeIn 1s forwards, glitch 1s infinite;
+        white-space: nowrap; /* Ensure it stays on one line */
+    }
+    .main-title::before,
+    .main-title::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .main-title::before {
+      left: 2px;
+      text-shadow: -2px 0 var(--pink);
+      animation: glitch-before 2s infinite linear alternate-reverse;
+    }
+    .main-title::after {
+      left: -2px;
+      text-shadow: -2px 0 var(--cyan), 2px 2px var(--pink);
+      animation: glitch-after 1.5s infinite linear alternate-reverse;
+    }
+
+    @media (max-width: 768px) {
+      .choice-container {
+        /* Keep the parent container as is for absolute positioning */
+      }
+      .choice-panel {
+        /* On mobile, make the panels wider to cover more area */
+        width: 100%; /* Keep full width on mobile too */
+      }
+      #mind .choice-content {
+        padding: 50% 0 0 8%; /* Adjust for mobile */
+        text-align: left;
+      }
+      #era .choice-content {
+        padding: 0 8% 50% 0; /* Adjust for mobile */
+        text-align: right;
+      }
+      .choice-content { animation-delay: 0.2s; }
+      .main-title {
+        font-size: 24px;
+        width: 100%; /* Ensure it takes full width for centering */
+        left: 0; /* Reset horizontal positioning for mobile */
+        transform: none; /* Remove transform to rely on text-align */
+        text-align: center; /* Center the text within the element */
+      }
+      .click-indicator { font-size: 9px; margin-top: 15px; }
+    }
+    @keyframes pulse-indicator {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.03); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SVG Filter for Psychedelic Hover Effect -->
+  <svg style="display:none">
+    <defs>
+      <filter id="liquid-filter">
+        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.03" numOctaves="1" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="15" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+
+  <canvas id="bg-canvas"></canvas>
+  <div id="multiverse-travel">
+    <div class="warp-tunnel"></div>
+    <div class="travel-msg">TRAVELING...</div>
+  </div>
+  <div id="noise-overlay"></div>
+  <h1 class="main-title" data-text="Choose Your Universe">Choose Your Universe</h1>
+
+  <div class="choice-container">
+    <a href="index.html" id="mind" class="choice-panel">
+      <div class="choice-content">
+        <h2 class="choice-title">OutOfMind</h2>
+        <p class="choice-subtitle">The Acid Universe</p>
+        <p class="click-indicator">Click to Enter</p>
+      </div>
+    </a>
+    <a href="vintage.html" id="era" class="choice-panel">
+      <div class="choice-content">
+        <h2 class="choice-title">OutOfEra</h2>
+        <p class="choice-subtitle">The Classic Universe</p>
+        <p class="click-indicator">Click to Enter</p>
+      </div>
+    </a>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    let t = 0;
+
+    function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        W = window.innerWidth;
+        H = window.innerHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.scale(dpr, dpr);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function hsl(h, s, l, a = 1) { return `hsla(${h % 360},${s}%,${l}%,${a})` }
+
+    function frame() {
+      t += 0.016;
+      ctx.fillStyle = '#080010';
+      ctx.fillRect(0, 0, W, H);
+      requestAnimationFrame(frame);
+    }
+    frame();
+
+    // --- TRAVEL ANIMATION LOGIC ---
+    const travelScreen = document.getElementById('multiverse-travel');
+
+    function generateWarpStars() {
+      const tunnel = travelScreen.querySelector('.warp-tunnel');
+      tunnel.innerHTML = '';
+      for(let i=0; i<60; i++) {
+        const star = document.createElement('div');
+        star.className = 'warp-star';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 500 + Math.random() * 800;
+        star.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        star.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+        star.style.animation = `starTravel ${0.4 + Math.random() * 0.4}s linear infinite`;
+        star.style.animationDelay = `${Math.random() * 0.6}s`;
+        tunnel.appendChild(star);
+      }
+    }
+
+    document.querySelectorAll('.choice-panel').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const destination = this.href;
+        document.body.classList.add('traveling');
+        generateWarpStars();
+        
+        setTimeout(() => {
+          window.location.href = destination;
+        }, 700); // 700ms delay to sync with animation
+      });
+    });
+  </script>
+
+</body>
+</html>
