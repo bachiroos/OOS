@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="only dark">
+  <meta name="theme-color" content="#080010">
+  <meta name="darkreader-lock">
+  <meta name="supported-color-schemes" content="only dark">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23080010'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial Black,sans-serif' font-weight='900' font-size='13' fill='%23FFFFFF'%3EOOS%3C/text%3E%3C/svg%3E">
+  <title>OutOfSight - Choose Your Reality</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    html { color-scheme: only dark; }
+    :root {
+      --acid: #E8FF00; --pink: #FF2D78; --cyan: #00F5FF;
+      --void: #080010; --purple: #8d4bfd; --soft: #F0E8FF;
+      --orange: #FF6B00; --lime: #39FF14;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html {
+      margin: 0; padding: 0;
+      background: #000;
+      color: var(--soft);
+      font-family: 'Syne', sans-serif;
+      height: 100%; overflow: hidden;
+    }
+    body.traveling { overflow: hidden; }
+
+    /* --- HEADER --- */
+    .landing-header {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; justify-content: center; align-items: center;
+      padding: 28px 20px;
+      pointer-events: none;
+    }
+    .header-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px; letter-spacing: 0.35em;
+      color: rgba(240, 232, 255, 0.4);
+      text-transform: uppercase;
+    }
+
+    /* --- SPLIT CONTAINER --- */
+    .split-container {
+      display: flex; height: 100vh; width: 100%;
+      position: relative; z-index: 1;
+    }
+
+    .panel {
+      position: relative; overflow: hidden;
+      flex: 1;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      text-decoration: none; color: inherit;
+      cursor: pointer;
+      transition: flex 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Hover expand: only on devices that support hover (not touch) */
+    @media (hover: hover) {
+      .split-container:hover .panel { flex: 0.7; }
+      .split-container .panel:hover { flex: 1.6; }
+    }
+
+
+    /* --- CYBER PANEL (LEFT) --- */
+    .panel-cyber {
+      background:
+        radial-gradient(ellipse 80% 60% at 30% 40%, rgba(123,47,255,0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 70% 80%, rgba(255,45,120,0.1) 0%, transparent 60%),
+        var(--void);
+    }
+    .panel-cyber::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(123,47,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123,47,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.6;
+      transition: opacity 0.5s ease;
+    }
+    @media (hover: hover) {
+      .panel-cyber:hover::before { opacity: 1; }
+    }
+
+    /* --- VINTAGE PANEL (RIGHT) --- */
+    .panel-vintage {
+      background: #EAD8C0;
+    }
+    .panel-vintage::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.08;
+    }
+
+    /* --- CENTER DIVIDER --- */
+    .divider {
+      position: absolute;
+      left: 50%; top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom,
+        transparent 5%,
+        rgba(141, 75, 253, 0.3) 20%,
+        rgba(0, 245, 255, 0.5) 50%,
+        rgba(141, 75, 253, 0.3) 80%,
+        transparent 95%
+      );
+      z-index: 50;
+      transform: translateX(-50%);
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px; height: 8px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 20px var(--cyan), 0 0 40px rgba(0,245,255,0.3);
+      animation: divPulse 3s ease-in-out infinite;
+    }
+    @keyframes divPulse {
+      0%, 100% { box-shadow: 0 0 15px var(--cyan), 0 0 30px rgba(0,245,255,0.2); transform: translate(-50%, -50%) scale(1); }
+      50% { box-shadow: 0 0 25px var(--cyan), 0 0 50px rgba(0,245,255,0.4); transform: translate(-50%, -50%) scale(1.4); }
+    }
+
+    .vs-badge { display: none; }
+
+    /* --- PANEL CONTENT --- */
+    .panel-content {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      gap: 14px; padding: 20px;
+      opacity: 0;
+      transform: translateY(24px);
+      animation: panelIn 0.8s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .panel-vintage .panel-content { animation-delay: 0.5s; }
+    @keyframes panelIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px; letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+    .panel-cyber .panel-eyebrow { color: var(--cyan); }
+    .panel-vintage .panel-eyebrow { color: #8B7355; }
+
+    .panel-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(42px, 7vw, 90px);
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      margin: 0;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), text-shadow 0.5s ease;
+    }
+    .panel-cyber .panel-title {
+      color: var(--acid);
+      text-shadow: 0 0 30px rgba(232, 255, 0, 0.15);
+    }
+    @media (hover: hover) {
+      .panel:hover .panel-title { transform: scale(1.06); }
+      .panel-cyber:hover .panel-title {
+        text-shadow: 0 0 40px rgba(232, 255, 0, 0.3);
+      }
+    }
+    .panel-vintage .panel-title {
+      color: #2D241E;
+      text-shadow: none;
+    }
+
+    .panel-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px; letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .panel-cyber .panel-subtitle { color: var(--soft); opacity: 0.4; }
+    .panel-vintage .panel-subtitle { color: #8B7355; opacity: 0.7; }
+
+    .panel-enter {
+      margin-top: 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px; letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 10px 28px;
+      border: 1px solid;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .panel-cyber .panel-enter {
+      color: var(--acid); border-color: rgba(232, 255, 0, 0.3);
+    }
+    .panel-vintage .panel-enter {
+      color: #2D241E; border-color: rgba(45, 36, 30, 0.3);
+    }
+
+    /* Desktop: reveal on hover */
+    @media (hover: hover) {
+      .panel-cyber:hover .panel-enter {
+        opacity: 1; transform: translateY(0);
+        box-shadow: 0 0 20px rgba(232, 255, 0, 0.15);
+      }
+      .panel-vintage:hover .panel-enter {
+        opacity: 1; transform: translateY(0);
+      }
+    }
+    /* Touch: always visible */
+    @media (hover: none) {
+      .panel-enter {
+        opacity: 1; transform: translateY(0);
+        pointer-events: auto;
+      }
+      .panel-cyber .panel-enter {
+        box-shadow: 0 0 20px rgba(232, 255, 0, 0.15);
+      }
+    }
+
+    /* --- CORNER DECORATIONS --- */
+    .corner-tag {
+      position: absolute;
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; letter-spacing: 0.15em;
+      text-transform: uppercase; opacity: 0.25;
+    }
+    .panel-cyber .corner-tag { color: var(--purple); bottom: 24px; left: 24px; }
+    .panel-vintage .corner-tag { color: #8B7355; bottom: 24px; right: 24px; }
+
+    /* --- FLOATING PARTICLES (CYBER SIDE) --- */
+    .particle {
+      position: absolute; border-radius: 50%;
+      pointer-events: none; opacity: 0;
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(0); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.3; }
+      100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+    }
+
+    /* --- MULTIVERSE TRAVEL LOADING SCREEN --- */
+    #multiverse-travel {
+      position: fixed; inset: 0; z-index: 9000;
+      background: #000;
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; pointer-events: none;
+    }
+    .traveling #multiverse-travel { display: flex; animation: travelOverlay 1.4s ease-in-out forwards; }
+    @keyframes travelOverlay {
+      0% { opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; }
+    }
+    .warp-tunnel { position: absolute; inset: 0; overflow: hidden; }
+    .warp-star {
+      position: absolute; width: 2px; height: 2px;
+      background: #fff; border-radius: 50%; opacity: 0;
+      left: 50%; top: 50%;
+    }
+    @keyframes starTravel {
+      0% { transform: translate(0,0) scale(0); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(4); opacity: 0; }
+    }
+    .travel-msg {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(32px, 8vw, 64px);
+      color: #fff; z-index: 10;
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 20px var(--cyan);
+      animation: glitchText 0.3s infinite;
+    }
+    @keyframes glitchText {
+      0% { transform: translate(0); }
+      20% { transform: translate(-3px, 1px); }
+      40% { transform: translate(3px, -1px); }
+      60% { transform: translate(-1px, 2px); }
+      80% { transform: translate(1px, -2px); }
+    }
+    #noise-overlay {
+      position: fixed; inset: -50%; z-index: 9500;
+      opacity: 0; pointer-events: none;
+    }
+
+    /* --- MOBILE (STACKED) --- */
+    @media (max-width: 768px) {
+      .split-container { flex-direction: column; }
+
+      .divider {
+        left: 0; right: 0; top: 50%;
+        width: 100%; height: 1px;
+        bottom: auto;
+        transform: translateY(-50%);
+        background: linear-gradient(to right,
+          transparent 5%,
+          rgba(141, 75, 253, 0.3) 20%,
+          rgba(0, 245, 255, 0.5) 50%,
+          rgba(141, 75, 253, 0.3) 80%,
+          transparent 95%
+        );
+      }
+      .panel-title { font-size: clamp(36px, 10vw, 60px); }
+      .landing-header { padding: 18px 16px; }
+      .header-brand { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="multiverse-travel">
+    <div class="warp-tunnel"></div>
+    <div class="travel-msg">TRAVELING...</div>
+  </div>
+  <div id="noise-overlay"></div>
+
+  <header class="landing-header">
+    <span class="header-brand">Out of Sight</span>
+  </header>
+
+  <div class="split-container">
+    <a href="index.html" id="mind" class="panel panel-cyber">
+      <div class="panel-content">
+        <span class="panel-eyebrow">// enter the void</span>
+        <h2 class="panel-title">Out-Of<br>Mind</h2>
+        <p class="panel-subtitle">The Acid Universe</p>
+        <span class="panel-enter">Enter</span>
+      </div>
+      <span class="corner-tag">Neon &middot; Trippy &middot; Acid</span>
+    </a>
+
+    <div class="divider"></div>
+    <div class="vs-badge">VS</div>
+
+    <a href="vintage.html" id="era" class="panel panel-vintage">
+      <div class="panel-content">
+        <span class="panel-eyebrow">// step back in time</span>
+        <h2 class="panel-title">Out-Of<br>Era</h2>
+        <p class="panel-subtitle">The Classic Universe</p>
+        <span class="panel-enter">Enter</span>
+      </div>
+      <span class="corner-tag">Warm &middot; Classic &middot; Vintage</span>
+    </a>
+  </div>
+
+  <script>
+    // --- FLOATING PARTICLES (CYBER PANEL) ---
+    const cyberPanel = document.querySelector('.panel-cyber');
+    function spawnParticles() {
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = 2 + Math.random() * 4;
+        const colors = ['var(--acid)', 'var(--cyan)', 'var(--purple)', 'var(--pink)'];
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.left = Math.random() * 100 + '%';
+        p.style.bottom = '-10px';
+        p.style.animationDuration = (6 + Math.random() * 10) + 's';
+        p.style.animationDelay = (Math.random() * 12) + 's';
+        p.style.filter = `blur(${Math.random() < 0.3 ? 1 : 0}px)`;
+        cyberPanel.appendChild(p);
+      }
+    }
+    spawnParticles();
+
+    // --- TRAVEL ANIMATION ---
+    const travelScreen = document.getElementById('multiverse-travel');
+
+    function generateWarpStars() {
+      const tunnel = travelScreen.querySelector('.warp-tunnel');
+      tunnel.innerHTML = '';
+      for (let i = 0; i < 60; i++) {
+        const star = document.createElement('div');
+        star.className = 'warp-star';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 500 + Math.random() * 800;
+        star.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        star.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+        star.style.animation = `starTravel ${0.4 + Math.random() * 0.4}s linear infinite`;
+        star.style.animationDelay = `${Math.random() * 0.6}s`;
+        tunnel.appendChild(star);
+      }
+    }
+
+    // --- PANEL CLICK: single click navigates directly ---
+    const panels = document.querySelectorAll('.panel');
+
+    panels.forEach(link => {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        const destination = this.href;
+        document.body.classList.add('traveling');
+        generateWarpStars();
+        setTimeout(() => { window.location.href = destination; }, 700);
+      });
+    });
+  </script>
+
+</body>
+</html>
