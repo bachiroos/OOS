@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {
+      "src": "^/$",
+      "dest": "/OutOfSight.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
