@@ -1,0 +1,206 @@
+
+<style>
+  body,html{margin:0;padding:0;background:#000}
+  canvas{display:block}
+  .wrap{position:relative;width:100%;background:#000;overflow:hidden}
+</style>
+<div class="wrap">
+  <canvas id="c"></canvas>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 420;
+canvas.width = W; canvas.height = H;
+canvas.style.width = '100%';
+canvas.style.height = 'auto';
+
+let t = 0;
+
+// ---- Tendrils ----
+const tendrils = [];
+for(let i=0;i<12;i++){
+  tendrils.push({
+    x: Math.random()*W, y: Math.random()*H,
+    len: 60+Math.random()*120,
+    angle: Math.random()*Math.PI*2,
+    speed: 0.008+Math.random()*0.012,
+    hue: Math.random()*360,
+    phase: Math.random()*Math.PI*2
+  });
+}
+
+function hsl(h,s,l,a=1){return `hsla(${h%360},${s}%,${l}%,${a})`}
+
+function drawBg(){
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0,0,W,H);
+  // pulsing deep color wash
+  const cx=W/2, cy=H/2;
+  for(let i=4;i>=0;i--){
+    const r = 200+i*80+Math.sin(t*0.4+i)*30;
+    const h = (t*20+i*60)%360;
+    const grd = ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+    grd.addColorStop(0, hsl(h,80,15,0.15));
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+function drawGrid(){
+  const spacing = 40;
+  const warp = 8;
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  for(let x=0;x<W;x+=spacing){
+    ctx.beginPath();
+    for(let y=0;y<=H;y+=4){
+      const dx = Math.sin(y*0.04+t*0.5)*warp;
+      y===0 ? ctx.moveTo(x+dx,y) : ctx.lineTo(x+dx,y);
+    }
+    ctx.strokeStyle = hsl((t*30+x)%360,80,60);
+    ctx.lineWidth=0.5;
+    ctx.stroke();
+  }
+  for(let y=0;y<H;y+=spacing){
+    ctx.beginPath();
+    for(let x=0;x<=W;x+=4){
+      const dy = Math.sin(x*0.04+t*0.5)*warp;
+      x===0 ? ctx.moveTo(x,y+dy) : ctx.lineTo(x,y+dy);
+    }
+    ctx.strokeStyle = hsl((t*30+y+120)%360,80,60);
+    ctx.lineWidth=0.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawTendrils(){
+  tendrils.forEach((td,i)=>{
+    td.angle += td.speed;
+    ctx.save();
+    ctx.globalAlpha=0.45;
+    ctx.lineWidth=1.5;
+    const hue=(td.hue+t*40)%360;
+    ctx.shadowColor=hsl(hue,100,60);
+    ctx.shadowBlur=8;
+    ctx.beginPath();
+    let px=td.x, py=td.y;
+    ctx.moveTo(px,py);
+    for(let s=0;s<td.len;s+=6){
+      const a=td.angle+Math.sin(s*0.1+t*0.8+td.phase)*1.2;
+      px+=Math.cos(a)*6;
+      py+=Math.sin(a)*6;
+      ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle=hsl(hue,100,65);
+    ctx.stroke();
+    // drift
+    td.x+=Math.cos(td.angle*0.1)*0.4;
+    td.y+=Math.sin(td.angle*0.1)*0.4;
+    if(td.x<-td.len) td.x=W+td.len;
+    if(td.x>W+td.len) td.x=-td.len;
+    if(td.y<-td.len) td.y=H+td.len;
+    if(td.y>H+td.len) td.y=-td.len;
+    ctx.restore();
+  });
+}
+
+function drawLogo(){
+  const text = 'OUT OF SiGHT';
+  const cx=W/2, cy=H/2+10;
+  const fs=86;
+  ctx.font=`900 ${fs}px "Arial Black", "Arial Bold", Arial, sans-serif`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+
+  // measure for outer glow layer
+  const tw=ctx.measureText(text).width;
+
+  // === OUTER GLOW (blooming light halo per-letter) ===
+  const chars=text.split('');
+  let totalW=ctx.measureText(text).width;
+  let startX=cx-totalW/2;
+
+  chars.forEach((ch,i)=>{
+    const cw=ctx.measureText(ch).width;
+    const lx=startX+cw/2;
+    const hue=(t*60+i*28)%360;
+    // multi-layer bloom
+    for(let g=5;g>=1;g--){
+      ctx.save();
+      ctx.globalAlpha=0.07*g;
+      ctx.shadowColor=`hsl(${hue},100%,70%)`;
+      ctx.shadowBlur=g*14;
+      ctx.fillStyle=`hsl(${hue},100%,75%)`;
+      ctx.font=`900 ${fs}px "Arial Black","Arial Bold",Arial,sans-serif`;
+      ctx.textAlign='left';
+      ctx.textBaseline='middle';
+      ctx.fillText(ch,startX,cy);
+      ctx.restore();
+    }
+    startX+=cw;
+  });
+
+  // === MAIN TEXT — rainbow gradient that shifts over time ===
+  startX=cx-totalW/2;
+  chars.forEach((ch,i)=>{
+    const cw=ctx.measureText(ch).width;
+    const hue=(t*60+i*30)%360;
+    const hue2=(hue+60)%360;
+    const grd=ctx.createLinearGradient(startX,cy-fs*0.55,startX,cy+fs*0.55);
+    grd.addColorStop(0, `hsl(${hue},100%,75%)`);
+    grd.addColorStop(0.4, `hsl(${(hue+40)%360},100%,65%)`);
+    grd.addColorStop(0.7, `hsl(${(hue+80)%360},95%,60%)`);
+    grd.addColorStop(1, `hsl(${hue2},100%,55%)`);
+
+    ctx.save();
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.font=`900 ${fs}px "Arial Black","Arial Bold",Arial,sans-serif`;
+
+    // black stroke outline (like the logo)
+    ctx.strokeStyle='#000';
+    ctx.lineWidth=7;
+    ctx.lineJoin='round';
+    ctx.strokeText(ch,startX,cy);
+
+    // colored fill
+    ctx.fillStyle=grd;
+    ctx.fillText(ch,startX,cy);
+    ctx.restore();
+
+    startX+=cw;
+  });
+
+  // === INNER WHITE HIGHLIGHT SHEEN ===
+  startX=cx-totalW/2;
+  chars.forEach((ch,i)=>{
+    const cw=ctx.measureText(ch).width;
+    ctx.save();
+    ctx.globalAlpha=0.12+Math.sin(t*1.5+i*0.5)*0.06;
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.font=`900 ${fs}px "Arial Black","Arial Bold",Arial,sans-serif`;
+    const grd=ctx.createLinearGradient(startX,cy-fs*0.55,startX,cy+5);
+    grd.addColorStop(0,'rgba(255,255,255,0.7)');
+    grd.addColorStop(0.45,'rgba(255,255,255,0.1)');
+    grd.addColorStop(1,'transparent');
+    ctx.fillStyle=grd;
+    ctx.fillText(ch,startX,cy);
+    ctx.restore();
+    startX+=cw;
+  });
+}
+
+function frame(){
+  t+=0.016;
+  drawBg();
+  drawGrid();
+  drawTendrils();
+  drawLogo();
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
