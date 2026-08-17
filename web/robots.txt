@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /oosadmin.html
-Disallow: /oosstats.html
-
-Sitemap: https://www.outofsightlb.com/sitemap.xml
